@@ -1,10 +1,12 @@
 
-
+resource "random_id" "suffix" {
+  byte_length = 4
+}
 ##########################################
 # IAM Role for EKS Cluster
 ##########################################
 resource "aws_iam_role" "eks_cluster_role" {
-  name = "${var.cluster_name}-eks-cluster-role-${var.env}"
+  name = "${var.cluster_name}-eks-cluster-role-${var.env}-${random_id.suffix.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -49,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSServicePolicy" {
 # IAM Role for EKS Node Group
 ##########################################
 resource "aws_iam_role" "eks_node_role" {
-  name = "${var.cluster_name}-eks-node-role-${var.env}"
+  name = "${var.cluster_name}-eks-node-role-${var.env}-${random_id.suffix.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -103,7 +105,7 @@ data "aws_caller_identity" "current" {}
 # IAM Policy for Cluster Autoscaler
 ##########################################
 resource "aws_iam_policy" "autoscaler" {
-  name        = "${var.cluster_name}-eks-autoscaler-policy-${var.env}"
+  name = "${var.cluster_name}-eks-autoscaler-policy-${var.env}-${random_id.suffix.hex}"
   description = "Policy for Kubernetes Cluster Autoscaler"
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -126,7 +128,7 @@ resource "aws_iam_policy" "autoscaler" {
 
   tags = merge(
     {
-      Name        = "${var.cluster_name}-eks-autoscaler-policy-${var.env}"
+      Name        = "${var.cluster_name}-eks-autoscaler-policy-${var.env}-${random_id.suffix.hex}"
       Environment = var.env
     },
     var.tags
@@ -153,6 +155,6 @@ resource "aws_iam_role_policy_attachment" "eks_node_autoscaler" {
 
 # Creating Instance Profile for EKS Node role
 resource "aws_iam_instance_profile" "eks_node_profile" {
-  name = "${var.cluster_name}-eks-node-profile-${var.env}"
+  name = "${var.cluster_name}-eks-node-profile-${var.env}-${random_id.suffix.hex}"
   role = aws_iam_role.eks_node_role.name
 }

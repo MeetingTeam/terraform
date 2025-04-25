@@ -109,3 +109,66 @@ resource "aws_security_group_rule" "nodes_ingress_ssh" {
   cidr_blocks       = ["0.0.0.0/0"]  # Hoặc hạn chế hơn, ví dụ: [var.vpc_cidr]
   description       = "SSH access to worker nodes"
 }
+
+
+# Security Group cho RDS MySQL
+resource "aws_security_group" "rds_sg" {
+  name        = "${var.cluster_name}-rds-sg-${var.env}"
+  description = "Security group for RDS MySQL instances"
+  vpc_id      = var.vpc_id
+
+  # MySQL
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_nodes_sg.id]
+    description     = "Allow MySQL access from EKS nodes"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    {
+      Name        = "${var.cluster_name}-rds-sg-${var.env}"
+      Environment = var.env
+    },
+    var.tags
+  )
+}
+
+# Security Group cho DocumentDB
+resource "aws_security_group" "docdb_sg" {
+  name        = "${var.cluster_name}-docdb-sg-${var.env}"
+  description = "Security group for DocumentDB cluster"
+  vpc_id      = var.vpc_id
+
+  # DocumentDB
+  ingress {
+    from_port       = 27017
+    to_port         = 27017
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_nodes_sg.id]
+    description     = "Allow DocumentDB access from EKS nodes"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    {
+      Name        = "${var.cluster_name}-docdb-sg-${var.env}"
+      Environment = var.env
+    },
+    var.tags
+  )
+}

@@ -43,3 +43,12 @@ output "private_route_table_ids" {
   value       = [aws_route_table.private_route_table1.id, aws_route_table.private_route_table2.id]
 }
 
+output "private_data_subnet1_id" {
+  description = "ID of the first private data subnet"
+  value       = aws_subnet.private_data_subnet1.id
+}
+
+output "private_data_subnet2_id" {
+  description = "ID of the second private data subnet"
+  value       = aws_subnet.private_data_subnet2.id
+}
