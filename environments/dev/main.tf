@@ -6,7 +6,14 @@ terraform {
       version = ">= 5.0.0"
     }
   }
+   backend "s3" {
+    bucket         = "nt548-terraform-statee"
+    key            = "nt548-terraform"
+    region         = "ap-southeast-1"
+    dynamodb_table = "nt548-terraform-statee"
+  }
 }
+
 provider "aws" {
   region = var.region
 }
