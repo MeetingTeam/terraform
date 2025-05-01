@@ -186,13 +186,14 @@ resource "null_resource" "post_install" {
     aws_eks_addon.ebs_csi_driver
   ]
 
+  # Chỉ trigger khi cần thiết - ví dụ khi có cập nhật lớn
   triggers = {
-    cluster_endpoint = aws_eks_cluster.main.endpoint
-    cluster_name     = aws_eks_cluster.main.name
+    cluster_version = aws_eks_cluster.main.version
+    # Thêm một trigger để quản lý việc chạy lại theo ý muốn
+    run_time = var.force_update_post_install ? timestamp() : "initial-run"
   }
 
   provisioner "local-exec" {
-    # Sử dụng Git Bash để thực thi script
     interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
     command     = "${path.module}/../../scripts/post_eks_install.sh ${var.cluster_name} ${var.region} ${var.env}"
   }
