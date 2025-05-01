@@ -1,0 +1,5 @@
+# Mặc định normalize line endings khi commit
+* text=auto
+
+# Đảm bảo các file shell script luôn sử dụng LF
+*.sh text eol=lf

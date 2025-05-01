@@ -146,10 +146,54 @@ resource "aws_eks_addon" "kube_proxy" {
     var.tags
   )
 }
+# Addon: EBS CSI Driver
+resource "aws_eks_addon" "ebs_csi_driver" {
+  cluster_name = aws_eks_cluster.main.name
+  addon_name   = "aws-ebs-csi-driver"
+
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "PRESERVE"
+
+  tags = merge(
+    {
+      Name        = "${var.cluster_name}-ebs-csi-driver-addon-${var.env}"
+      Environment = var.env
+    },
+    var.tags
+  )
+
+  # EBS CSI Driver requires working nodes and IAM permissions
+  depends_on = [aws_eks_node_group.main]
+}
 
 ##########################################
 # Outputs để có thể kết nối đến cluster
 ##########################################
 data "aws_eks_cluster_auth" "main" {
   name = aws_eks_cluster.main.name
+}
+
+
+resource "null_resource" "post_install" {
+  count = var.run_post_install_script ? 1 : 0
+
+  depends_on = [
+    aws_eks_cluster.main,
+    aws_eks_node_group.main,
+    aws_eks_addon.coredns,
+    aws_eks_addon.vpc_cni,
+    aws_eks_addon.kube_proxy,
+    aws_eks_addon.ebs_csi_driver
+  ]
+
+  triggers = {
+    cluster_endpoint = aws_eks_cluster.main.endpoint
+    cluster_name     = aws_eks_cluster.main.name
+  }
+
+  provisioner "local-exec" {
+    # Sử dụng Git Bash để thực thi script
+    interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
+    command     = "${path.module}/../../scripts/post_eks_install.sh ${var.cluster_name} ${var.region} ${var.env}"
+  }
 }

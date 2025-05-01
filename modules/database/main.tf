@@ -29,6 +29,9 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
     },
     var.tags
   )
+   lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_docdb_subnet_group" "docdb_subnet_group" {
@@ -44,6 +47,9 @@ resource "aws_docdb_subnet_group" "docdb_subnet_group" {
     },
     var.tags
   )
+   lifecycle {
+    create_before_destroy = true
+  }
 }
 
 ##########################################
