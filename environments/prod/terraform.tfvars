@@ -8,8 +8,8 @@ mysql_password       = "Admin!123456" # Nên sử dụng AWS Secrets Manager tro
 docdb_password       = "Admin!123456" # Nên sử dụng AWS Secrets Manager trong môi trường thực tế
 create_mysql         = true
 create_documentdb    = true
-mysql_instance_class = "db.t3.medium"
-docdb_instance_class = "db.t3.medium"
+mysql_instance_class = "db.t3.large"
+docdb_instance_class = "db.t3.large"
 # Subnet configurations
 public_subnet_cidrs     = ["10.1.1.0/24", "10.1.2.0/24"]
 private_app_subnet_cidrs = ["10.1.3.0/24", "10.1.4.0/24"]
