@@ -189,7 +189,10 @@ resource "aws_eks_addon" "efs_csi_driver" {
 data "aws_eks_cluster_auth" "main" {
   name = aws_eks_cluster.main.name
 }
-
+locals {
+  is_windows = substr(pathexpand("~"), 0, 1) == "/" ? false : true
+  interpreter = local.is_windows ? ["C:/Program Files/Git/bin/bash.exe", "-c"] : ["/bin/bash", "-c"]
+}
 
 resource "null_resource" "post_install" {
   count = var.run_post_install_script ? 1 : 0
@@ -211,7 +214,7 @@ resource "null_resource" "post_install" {
   }
 
   provisioner "local-exec" {
-    interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
+    interpreter = local.interpreter
     command     = "${path.module}/../../scripts/post_eks_install.sh ${var.cluster_name} ${var.region} ${var.env}"
   }
 }

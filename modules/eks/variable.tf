@@ -107,3 +107,8 @@ variable "force_update_post_install" {
   type        = bool
   default     = false
 }
+variable "os_type" {
+  description = "Hệ điều hành máy chạy Terraform (windows hoặc linux)"
+  type        = string
+  default     = "linux"  # Mặc định là Linux cho môi trường CI/CD
+}

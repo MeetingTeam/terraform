@@ -1,5 +1,9 @@
-#!/bin/bash
 
+# Các biến môi trường
+
+
+
+# Phần còn lại của script...
 # Lấy tham số đầu vào
 CLUSTER_NAME=$1
 REGION=$2
@@ -14,8 +18,14 @@ aws eks update-kubeconfig --region ${REGION} --name ${CLUSTER_NAME}-${ENV}
 # Đảm bảo kubectl đã được cấu hình đúng
 kubectl cluster-info
 
-# Tạo thư mục làm việc theo cách tương thích với Git Bash
-WORK_DIR=$(mktemp -d -p /tmp eks-post-install.XXXXXX)
+# Kiểm tra môi trường và điều chỉnh đường dẫn nếu cần
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+  # Đang chạy trên Windows Git Bash
+  TEMP_DIR=$(mktemp -d -p /c/temp eks-post-install.XXXXXX 2>/dev/null || mktemp -d -p /tmp eks-post-install.XXXXXX)
+else
+  # Đang chạy trên Linux
+  TEMP_DIR=$(mktemp -d)
+fi
 echo "Working directory: ${WORK_DIR}"
 cd "${WORK_DIR}" || exit 1
 
