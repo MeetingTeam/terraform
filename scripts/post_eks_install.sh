@@ -1,9 +1,6 @@
+#!/bin/sh
+# Đảm bảo script tương thích với cả sh và bash
 
-# Các biến môi trường
-
-
-
-# Phần còn lại của script...
 # Lấy tham số đầu vào
 CLUSTER_NAME=$1
 REGION=$2
@@ -18,14 +15,15 @@ aws eks update-kubeconfig --region ${REGION} --name ${CLUSTER_NAME}-${ENV}
 # Đảm bảo kubectl đã được cấu hình đúng
 kubectl cluster-info
 
-# Kiểm tra môi trường và điều chỉnh đường dẫn nếu cần
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+# Kiểm tra môi trường - sử dụng cú pháp tương thích với sh
+if [ -n "$OSTYPE" ] && ([ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]); then
   # Đang chạy trên Windows Git Bash
-  TEMP_DIR=$(mktemp -d -p /c/temp eks-post-install.XXXXXX 2>/dev/null || mktemp -d -p /tmp eks-post-install.XXXXXX)
+  WORK_DIR=$(mktemp -d -p /c/temp eks-post-install.XXXXXX 2>/dev/null || mktemp -d -p /tmp eks-post-install.XXXXXX)
 else
-  # Đang chạy trên Linux
-  TEMP_DIR=$(mktemp -d)
+  # Đang chạy trên Linux hoặc container
+  WORK_DIR=$(mktemp -d)
 fi
+
 echo "Working directory: ${WORK_DIR}"
 cd "${WORK_DIR}" || exit 1
 
@@ -33,6 +31,7 @@ cd "${WORK_DIR}" || exit 1
 echo "Cloning k8s-repo repository"
 git clone https://github.com/MeetingTeam/k8s-repo.git --branch main
 cd k8s-repo/opensource || exit 1
+
 
 # Chỉ cấu hình EFS và Jenkins trong môi trường dev
 if [ "${ENV}" == "dev" ]; then

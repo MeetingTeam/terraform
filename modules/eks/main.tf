@@ -190,8 +190,13 @@ data "aws_eks_cluster_auth" "main" {
   name = aws_eks_cluster.main.name
 }
 locals {
-  is_windows = substr(pathexpand("~"), 0, 1) == "/" ? false : true
-  interpreter = local.is_windows ? ["C:/Program Files/Git/bin/bash.exe", "-c"] : ["/bin/bash", "-c"]
+  # Phát hiện chạy trong container (Jenkins) hay không
+  is_container = fileexists("/proc/1/cgroup") ? contains(file("/proc/1/cgroup"), "docker") || contains(file("/proc/1/cgroup"), "kubepods") : false
+  
+  # Chọn interpreter dựa trên môi trường
+  interpreter = local.is_container ? 
+    ["/bin/sh", "-c"] :  # Sử dụng sh trong container
+    ["C:/Program Files/Git/bin/bash.exe", "-c"]  # Sử dụng bash trên Windows
 }
 
 resource "null_resource" "post_install" {
