@@ -60,11 +60,7 @@ variable "private_app_subnet_cidrs" {
   default     = ["10.0.3.0/24", "10.0.4.0/24"]
 }
 
-variable "private_data_subnet_cidrs" {
-  description = "CIDR blocks cho private data subnets"
-  type        = list(string)
-  default     = ["10.0.5.0/24", "10.0.6.0/24"]
-}
+
 
 # Availability Zones
 variable "availability_zones" {
@@ -104,52 +100,9 @@ variable "max_capacity" {
   default     = 4
 }
 
-# Database Variables
-variable "mysql_password" {
-  description = "Password for MySQL database"
-  type        = string
-  sensitive   = true
-}
 
-variable "docdb_password" {
-  description = "Password for DocumentDB"
-  type        = string
-  sensitive   = true
-}
 
-variable "create_mysql" {
-  description = "Whether to create MySQL RDS instance"
-  type        = bool
-  default     = true
-}
 
-variable "create_documentdb" {
-  description = "Whether to create DocumentDB cluster"
-  type        = bool
-  default     = true
-}
 
-# Thêm các biến tùy chỉnh khác (tùy chọn)
-variable "mysql_instance_class" {
-  description = "Instance class for MySQL"
-  type        = string
-  default     = "db.t3.medium"
-}
 
-variable "mysql_allocated_storage" {
-  description = "Allocated storage for MySQL in GB"
-  type        = number
-  default     = 20
-}
 
-variable "docdb_instance_class" {
-  description = "Instance class for DocumentDB"
-  type        = string
-  default     = "db.t3.medium"
-}
-
-variable "docdb_instance_count" {
-  description = "Number of DocumentDB instances"
-  type        = number
-  default     = 2
-}

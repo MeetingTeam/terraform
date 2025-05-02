@@ -6,6 +6,3 @@ kubernetes_version = "1.28"
 key_name          = "volunteer-work-keypair"  # Thay bằng tên key pair thực tế nếu cần SSH access
 
 
-mysql_instance_class = "db.t3.medium"
-docdb_instance_class = "db.t3.medium"
-# Các giá trị khác sẽ sử dụng default từ module
