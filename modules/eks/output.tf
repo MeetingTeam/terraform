@@ -42,3 +42,4 @@ output "kubeconfig_command" {
   description = "Lệnh để cập nhật kubeconfig để kết nối đến cluster"
   value       = "aws eks update-kubeconfig --region ${var.region} --name ${aws_eks_cluster.main.name}"
 }
+

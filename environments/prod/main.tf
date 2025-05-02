@@ -7,10 +7,10 @@ terraform {
     }
   }
    backend "s3" {
-    bucket         = "nt548-terraform-statee"
-    key            = "nt548-terraform"
-    region         = "ap-southeast-1"
-    dynamodb_table = "nt548-terraform-statee"
+  bucket         = "nt548-terraform-state-prod"
+  key            = "terraform.tfstate"
+  region         = "ap-southeast-1"
+  dynamodb_table = "nt548-terraform-lock-prod"
   }
 }
 

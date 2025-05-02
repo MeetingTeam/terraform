@@ -7,10 +7,10 @@ terraform {
     }
   }
    backend "s3" {
-    bucket         = "nt548-terraform-statee"
-    key            = "nt548-terraform"
-    region         = "ap-southeast-1"
-    dynamodb_table = "nt548-terraform-statee"
+  bucket         = "nt548-terraform-state-dev"
+  key            = "terraform.tfstate"
+  region         = "ap-southeast-1"
+  dynamodb_table = "nt548-terraform-lock-dev"
   }
 }
 
@@ -119,36 +119,19 @@ module "eks" {
   ]
 }
 
-module "database" {
-  source = "../../modules/database"
 
-  cluster_name           = local.cluster_name
-  env                    = local.env
-  private_data_subnet_ids = [
-    module.network.private_data_subnet1_id,
-    module.network.private_data_subnet2_id
-  ]
+
+module "jenkins_efs" {
+  source = "../../modules/efs"
   
-  # Kích hoạt tạo database theo nhu cầu
-  create_mysql           = true
-  create_documentdb      = true
+  cluster_name       = var.cluster_name
+  env                = var.env
+  vpc_id             = module.network.vpc_id
+  private_subnet_ids = module.network.private_app_subnet_ids
+  security_group_id  = module.security.efs_sg_id
+  region             = var.region
   
-  # MySQL config
-  rds_sg_id              = module.security.rds_sg_id
-  mysql_db_name          = "appdb"
-  mysql_username         = "dbadmin"
-  mysql_password         = var.mysql_password
-  mysql_instance_class   = "db.t3.medium"
-  mysql_multi_az         = true
-  mysql_allocated_storage = 20
+  tags = var.tags
   
-  # DocumentDB config
-  docdb_sg_id            = module.security.docdb_sg_id
-  docdb_username         = "dbadmin"
-  docdb_password         = var.docdb_password
-  docdb_instance_class   = "db.t3.medium"
-  docdb_instance_count   = 2
-  docdb_deletion_protection = false
-  
-  tags                   = local.tags
+  depends_on = [module.eks]
 }

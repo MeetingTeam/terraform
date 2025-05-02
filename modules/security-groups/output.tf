@@ -17,3 +17,10 @@ output "docdb_sg_id" {
   description = "ID of DocumentDB security group"
   value       = aws_security_group.docdb_sg.id
 }
+
+// Thêm vào cuối file
+
+output "efs_sg_id" {
+  description = "ID của Security Group cho EFS"
+  value       = aws_security_group.efs_sg.id
+}

@@ -163,3 +163,10 @@ resource "aws_iam_role_policy_attachment" "eks_node_AmazonEBSCSIDriverPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
   role       = aws_iam_role.eks_node_role.name
 }
+
+
+# Attaching EFS CSI Driver Policy to EKS Node role
+resource "aws_iam_role_policy_attachment" "eks_node_AmazonEFSCSIDriverPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+  role       = aws_iam_role.eks_node_role.name
+}

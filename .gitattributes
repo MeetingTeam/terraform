@@ -1,5 +1,15 @@
 # Mặc định normalize line endings khi commit
 * text=auto
 
-# Đảm bảo các file shell script luôn sử dụng LF
+# Đảm bảo các file liên quan đến Linux/Kubernetes/YAML luôn sử dụng LF
 *.sh text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.tpl text eol=lf
+*.hcl text eol=lf
+
+# Đảm bảo các file Terraform luôn sử dụng LF
+*.tf text eol=lf
+*.tfvars text eol=lf
+*.tfstate text eol=lf
+*.tfstate.backup text eol=lf
