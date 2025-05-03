@@ -199,7 +199,8 @@ locals {
 
 
 resource "null_resource" "post_install" {
-  count = var.run_post_install_script ? 1 : 0
+  # Chỉ chạy khi không phải trong container VÀ run_post_install_script = true
+  count = (!local.is_container && var.run_post_install_script) ? 1 : 0
 
   depends_on = [
     aws_eks_cluster.main,
@@ -208,7 +209,7 @@ resource "null_resource" "post_install" {
     aws_eks_addon.vpc_cni,
     aws_eks_addon.kube_proxy,
     aws_eks_addon.ebs_csi_driver,
-    aws_eks_addon.efs_csi_driver  # Thêm dòng này
+    aws_eks_addon.efs_csi_driver
   ]
 
   # Trigger system
@@ -218,7 +219,7 @@ resource "null_resource" "post_install" {
   }
 
   provisioner "local-exec" {
-    interpreter = local.interpreter
+    interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
     command     = "${path.module}/../../scripts/post_eks_install.sh ${var.cluster_name} ${var.region} ${var.env}"
   }
 }

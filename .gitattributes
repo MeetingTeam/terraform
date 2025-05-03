@@ -2,7 +2,7 @@
 * text=auto
 
 # Đảm bảo các file liên quan đến Linux/Kubernetes/YAML luôn sử dụng LF
-*.sh text eol=lf
+*.sh text eol=lf executable
 *.yaml text eol=lf
 *.yml text eol=lf
 *.tpl text eol=lf
