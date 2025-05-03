@@ -194,9 +194,8 @@ locals {
   is_container = fileexists("/proc/1/cgroup") ? contains(file("/proc/1/cgroup"), "docker") || contains(file("/proc/1/cgroup"), "kubepods") : false
   
   # Chọn interpreter dựa trên môi trường
-  interpreter = local.is_container ? 
-    ["/bin/sh", "-c"] :  # Sử dụng sh trong container
-    ["C:/Program Files/Git/bin/bash.exe", "-c"]  # Sử dụng bash trên Windows
+  # Sử dụng sh trong container, bash trên Windows
+  interpreter = local.is_container ? ["/bin/sh", "-c"] : ["C:/Program Files/Git/bin/bash.exe", "-c"]
 }
 
 resource "null_resource" "post_install" {
