@@ -190,13 +190,13 @@ data "aws_eks_cluster_auth" "main" {
   name = aws_eks_cluster.main.name
 }
 locals {
-  # Phát hiện chạy trong container (Jenkins) hay không
-  is_container = fileexists("/proc/1/cgroup") ? contains(file("/proc/1/cgroup"), "docker") || contains(file("/proc/1/cgroup"), "kubepods") : false
-  
-  # Chọn interpreter dựa trên môi trường
-  # Sử dụng sh trong container, bash trên Windows
+  is_container = fileexists("/proc/1/cgroup") ? (
+    can(regex("docker", file("/proc/1/cgroup"))) || can(regex("kubepods", file("/proc/1/cgroup")))
+  ) : false
+
   interpreter = local.is_container ? ["/bin/sh", "-c"] : ["C:/Program Files/Git/bin/bash.exe", "-c"]
 }
+
 
 resource "null_resource" "post_install" {
   count = var.run_post_install_script ? 1 : 0
