@@ -1,0 +1,30 @@
+Bước 1: Cấu hình aws configure, cài đặt kubectl, cài đặt helm chart, cài đặt git
+Bước 2: Lần lượt dev vào prod chạy lệnh terraform init, và terraform apply 
+Bước 3: Mở git bash: 
+aws eks update-kubeconfig --name doan-cluster-dev --region ap-southeast-1
+Truy cập Jenkins bằng kubectl port-forward (nhanh, dùng tạm)
+
+kubectl port-forward svc/jenkins 30808:8080 -n jenkins
+Bước 4: Truy cập Jenkins
+http://localhost:30808
+
+Bước 5: Cài đặt plugin
+ # Kubernetes
+    # Pipeline
+    # Git
+    # Configuration as Code Plugin
+Bước 6: Cài đặt credentials, secret 
+awsAccessKeyId: 
+awsSecretAccessKey: 
+betterguy2004: 
+kubectl get secret jenkins -o yaml -n jenkins
+https://www.base64decode.org/
+
+Bước 7: Thực hiện kịch bản Jenkins trigger terraform-pipeline khi có cập nhật thay đổi terraform trên git hub
+
+
+https://github.com/MeetingTeam/terraform
+
+This project is parameterized
+ENV: dev prod
+
