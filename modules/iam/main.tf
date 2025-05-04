@@ -135,11 +135,11 @@ resource "aws_iam_policy" "autoscaler" {
   )
 }
 
-# Attaching X-Ray Policy to EKS Node role
-resource "aws_iam_role_policy_attachment" "eks_node_XRayDaemonWriteAccess" {
-  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
-  role       = aws_iam_role.eks_node_role.name
-}
+# # Attaching X-Ray Policy to EKS Node role
+# resource "aws_iam_role_policy_attachment" "eks_node_XRayDaemonWriteAccess" {
+#   policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+#   role       = aws_iam_role.eks_node_role.name
+# }
 
 # Attaching S3 Read Policy to EKS Node role
 resource "aws_iam_role_policy_attachment" "eks_node_S3ReadOnlyAccess" {
@@ -171,7 +171,54 @@ resource "aws_iam_role_policy_attachment" "eks_node_AmazonEFSCSIDriverPolicy" {
   role       = aws_iam_role.eks_node_role.name
 }
 
-# resource "aws_iam_role_policy_attachment" "eks_node_CloudWatchAgentServerPolicy" {
-#   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-#   role       = aws_iam_role.eks_node_role.name
-# }
+# 1. Get the policy document for CloudWatchAgentServerPolicy
+data "aws_iam_policy" "cloudwatch_agent" {
+  arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# 2. Create a combined policy
+resource "aws_iam_policy" "combined_monitoring_lb" {
+  name        = "${var.cluster_name}-combined-monitoring-lb-${var.env}"
+  description = "Combined policy for CloudWatch and Load Balancer Controller"
+  
+  # Merge both policy statements
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = concat(
+      jsondecode(data.aws_iam_policy.cloudwatch_agent.policy).Statement,
+      [
+        {
+          Effect = "Allow",
+          Action = [
+            "ec2:CreateTags",
+            "ec2:DeleteTags",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeAddresses",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeInternetGateways",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeTags",
+            "ec2:DescribeVpcs",
+            "elasticloadbalancing:*",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CreateSecurityGroup",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:RevokeSecurityGroupIngress"
+          ],
+          Resource = "*"
+        }
+      ]
+    )
+  })
+}
+
+# 3. Remove the individual policy attachments
+# DELETE: aws_iam_role_policy_attachment.eks_node_CloudWatchAgentServerPolicy
+# DELETE: aws_iam_role_policy_attachment.eks_node_LoadBalancerControllerPolicy
+
+# 4. Add combined policy attachment
+resource "aws_iam_role_policy_attachment" "eks_node_combined_monitoring_lb" {
+  policy_arn = aws_iam_policy.combined_monitoring_lb.arn
+  role       = aws_iam_role.eks_node_role.name
+}
