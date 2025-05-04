@@ -66,10 +66,25 @@ EOF
   helm upgrade --install jenkins jenkins -f jenkins/values.custom.yaml -n jenkins --create-namespace
 fi
 
+# ...existing code...
 # Các cài đặt chung cho mọi môi trường
 echo "Installing/Upgrading Nginx Ingress"
 kubectl create ns ingress-nginx 2>/dev/null || echo "Namespace ingress-nginx already exists"
-helm upgrade --install ingress-nginx ingress-nginx -f ingress-nginx/values.dev.yaml -n ingress-nginx --create-namespace
+
+# Chọn file values dựa trên môi trường
+if [ "${ENV}" == "dev" ]; then
+  NGINX_VALUES_FILE="ingress-nginx/values.dev.yaml"
+elif [ "${ENV}" == "prod" ]; then
+  NGINX_VALUES_FILE="ingress-nginx/values.prod.yaml"
+else
+  echo "Warning: Unknown environment '${ENV}' for Nginx Ingress. Defaulting to dev values."
+  NGINX_VALUES_FILE="ingress-nginx/values.dev.yaml" # Hoặc một file mặc định khác nếu cần
+fi
+
+echo "Using Nginx values file: ${NGINX_VALUES_FILE}"
+helm upgrade --install ingress-nginx ingress-nginx -f "${NGINX_VALUES_FILE}" -n ingress-nginx --create-namespace
+
+
 
 # Chỉ cài đặt Jenkins ở môi trường dev, đã được xử lý ở trên
 

@@ -91,7 +91,7 @@ variable "desired_capacity" {
 variable "min_capacity" {
   description = "Số lượng worker nodes tối thiểu"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "max_capacity" {

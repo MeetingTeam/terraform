@@ -99,6 +99,27 @@ resource "aws_security_group_rule" "nodes_ingress_https" {
   description       = "Allow pods running extension API servers on port 443 to receive communication from cluster control plane"
 }
 
+resource "aws_security_group_rule" "nodes_ingress_http" {
+  security_group_id = aws_security_group.eks_nodes_sg.id
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "Allow HTTP traffic from internet via load balancer"
+}
+
+# Allow load balancer health checks and traffic (optional if you create a separate LB security group)
+resource "aws_security_group_rule" "nodes_ingress_health_checks" {
+  security_group_id = aws_security_group.eks_nodes_sg.id
+  type              = "ingress"
+  from_port         = 31380
+  to_port           = 31400
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]  # Ideally restrict to load balancer CIDR
+  description       = "Allow traffic from load balancer to node ports"
+}
+
 # Nếu có các quy tắc khác như SSH access, thêm ở dưới đây
 resource "aws_security_group_rule" "nodes_ingress_ssh" {
   security_group_id = aws_security_group.eks_nodes_sg.id
@@ -202,4 +223,14 @@ resource "aws_security_group" "efs_sg" {
     },
     var.tags
   )
+}
+
+resource "aws_security_group_rule" "nodes_ingress_nodeports" {
+  security_group_id = aws_security_group.eks_nodes_sg.id
+  type              = "ingress"
+  from_port         = 30000
+  to_port           = 32767
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "Allow traffic to Kubernetes node ports"
 }

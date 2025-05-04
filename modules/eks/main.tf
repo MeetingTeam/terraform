@@ -183,6 +183,29 @@ resource "aws_eks_addon" "efs_csi_driver" {
   # EFS CSI Driver requires working nodes and IAM permissions
   depends_on = [aws_eks_node_group.main]
 }
+
+# Addon: CloudWatch Observability
+# resource "aws_eks_addon" "cloudwatch_observability" {
+#   cluster_name = aws_eks_cluster.main.name
+#   addon_name   = "amazon-cloudwatch-observability"
+
+#   resolve_conflicts_on_create = "OVERWRITE"
+#   resolve_conflicts_on_update = "PRESERVE"
+
+#   tags = merge(
+#     {
+#       Name        = "${var.cluster_name}-cloudwatch-observability-addon-${var.env}"
+#       Environment = var.env
+#     },
+#     var.tags
+#   )
+
+#   # Depends on node group and necessary IAM permissions being attached
+#   depends_on = [
+#     aws_eks_node_group.main 
+#   ]
+# }
+
 ##########################################
 # Outputs để có thể kết nối đến cluster
 ##########################################
