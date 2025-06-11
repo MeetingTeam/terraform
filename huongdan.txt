@@ -28,3 +28,39 @@ https://github.com/MeetingTeam/terraform
 This project is parameterized
 ENV: dev prod
 
+======================== ===========
+kubectl -n vault cp ./. vault-0:/home/vault
+
+
+$ kubectl exec -it vault-0 -n vault -- sh
+/ $ vault operator init
+Unseal Key 1: E1p0puXuxTJOKWSMXy0UeHbmvXP+EuAS+esozFWRT4Bs
+Unseal Key 2: OvUNCqCvOUQ2n1QpfY39pDbHDP/8qw15xoFfisqTF4A0
+Unseal Key 3: fRlli5eF2W9twfcv3cPPFsSbRKnbyH9e6psHs0Y5uw8j
+Unseal Key 4: Gb2msIN8/F/V2ZxHk5qD5MJgiWBbjqGNJ7p82hOa6aDJ
+Unseal Key 5: YOZUhoItoW06hvmtMs6XWAP3GGjiGkO4fw0sZLNdij0B
+
+Initial Root Token: hvs.VEtHY2rEZsiPsbdt5wCJKPIt
+
+vault operator unseal
+
+sh vault-install.sh
+
+
+
+
+kubectl apply -f k8s-repo-credentials.yaml
+
+
+
+kubectl port-forward svc/argocd-server  30081:80 -n argo
+
+Dùng git: kubectl -n argo get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+
+cd k8s-repo/argocd-apps
+
+helm install argocd-apps . -f values.prod.yaml -n argo
+====
+
+Lưu ý trước khi terraform destroy nhớ xoá target group và load balancer

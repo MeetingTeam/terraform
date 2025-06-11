@@ -96,14 +96,4 @@ variable "tags" {
 }
 
 
-variable "run_post_install_script" {
-  description = "Có chạy script cài đặt sau khi triển khai EKS không"
-  type        = bool
-  default     = true
-}
 
-variable "force_update_post_install" {
-  description = "Force chạy lại post-installation script"
-  type        = bool
-  default     = false
-}

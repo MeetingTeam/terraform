@@ -1,0 +1,20 @@
+k8s:
+  server: 'https://kubernetes.default.svc'
+  repoUrl: 'https://github.com/MeetingTeam/k8s-repo.git'
+
+appproject:
+  name: meetingteam
+  description: "Project for meetingteam microservice"
+  namespaces:
+    - 'default'
+    - 'ingress-nginx'
+    - 'jenkins'
+    - 'vault'
+    - 'argo'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+
+applications: []
+

@@ -1,0 +1,107 @@
+applications:
+  - name: "ingress-nginx"
+    namespace: "ingress-nginx"
+    source:
+      path: "opensource/ingress-nginx"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.custom.yaml
+    syncPolicy:
+      syncOptions:
+        - CreateNamespace=true
+  - name: "argo-rollouts"
+    namespace: "argo"
+    source:
+      path: "opensource/argo-rollouts"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.custom.yaml
+    syncPolicy:
+      syncOptions:
+        - CreateNamespace=true
+  - name: "vault"
+    namespace: "vault"
+    source:
+      path: "opensource/vault"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.custom.yaml
+    syncPolicy:
+      syncOptions:
+        - CreateNamespace=true
+  - name: "rabbitmq"
+    namespace: "default"
+    source:
+      path: "opensource/rabbitmq"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.custom.yaml
+    syncPolicy: {}
+  - name: "user-service"
+    namespace: "default"
+    source:
+      path: "application/user-service"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.prod.yaml
+    syncPolicy: {}
+  - name: "team-service"
+    namespace: "default"
+    source:
+      path: "application/team-service"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.prod.yaml
+    syncPolicy: {}
+  - name: "chat-service"
+    namespace: "default"
+    source:
+      path: "application/chat-service"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.prod.yaml
+    syncPolicy: {}
+  - name: "meeting-service"
+    namespace: "default"
+    source:
+      path: "application/meeting-service"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.prod.yaml
+    syncPolicy: {}
+  - name: "websocket-service"
+    namespace: "default"
+    source:
+      path: "application/websocket-service"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.prod.yaml
+    syncPolicy: {}
+  - name: "frontend-service"
+    namespace: "default"
+    source:
+      path: "application/frontend-service"
+      targetRevision: "main"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values.prod.yaml
+    syncPolicy: {}

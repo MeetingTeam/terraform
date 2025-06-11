@@ -5,6 +5,14 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.0.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.9.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.20.0"
+    }
   }
    backend "s3" {
   bucket         = "nt548-terraform-state-prod"
@@ -23,6 +31,27 @@ locals {
   cluster_name = var.cluster_name
   env          = var.env
   tags         = var.tags
+}
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_id]
+    command     = "aws"
+  }
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_id]
+      command     = "aws"
+    }
+  }
 }
 
 module "network" {
@@ -133,8 +162,8 @@ module "database" {
   ]
   
   # Kích hoạt tạo database theo nhu cầu
-  create_mysql           = true
-  create_documentdb      = true
+  create_mysql           = var.create_mysql
+  create_documentdb      = var.create_documentdb
   
   # MySQL config
   rds_sg_id              = module.security.rds_sg_id
@@ -154,4 +183,13 @@ module "database" {
   docdb_deletion_protection = false
   
   tags                   = local.tags
+}
+module "helm_releases" {
+  source = "../../modules/helm-releases"
+  
+  environment = var.env
+  
+  depends_on = [
+    module.eks
+  ]
 }

@@ -212,37 +212,4 @@ resource "aws_eks_addon" "cloudwatch_observability" {
 data "aws_eks_cluster_auth" "main" {
   name = aws_eks_cluster.main.name
 }
-locals {
-  is_container = fileexists("/proc/1/cgroup") ? (
-    can(regex("docker", file("/proc/1/cgroup"))) || can(regex("kubepods", file("/proc/1/cgroup")))
-  ) : false
 
-  interpreter = local.is_container ? ["/bin/sh", "-c"] : ["C:/Program Files/Git/bin/bash.exe", "-c"]
-}
-
-
-resource "null_resource" "post_install" {
-  # Chỉ chạy khi không phải trong container VÀ run_post_install_script = true
-  count = (!local.is_container && var.run_post_install_script) ? 1 : 0
-
-  depends_on = [
-    aws_eks_cluster.main,
-    aws_eks_node_group.main,
-    aws_eks_addon.coredns,
-    aws_eks_addon.vpc_cni,
-    aws_eks_addon.kube_proxy,
-    aws_eks_addon.ebs_csi_driver,
-    aws_eks_addon.efs_csi_driver
-  ]
-
-  # Trigger system
-  triggers = {
-    cluster_version = aws_eks_cluster.main.version
-    run_time = var.force_update_post_install ? timestamp() : "initial-run"
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
-    command     = "${path.module}/../../scripts/post_eks_install.sh ${var.cluster_name} ${var.region} ${var.env}"
-  }
-}

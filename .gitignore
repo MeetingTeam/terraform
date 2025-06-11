@@ -1,0 +1,36 @@
+# Terraform artifacts
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+terraform.tfvars
+*.tfplan
+crash.log
+
+# Vault secrets folder - loại trừ toàn bộ thư mục vault-secret
+vault-secret/
+vault-secret-*/
+
+# Kubernetes credentials
+k8s-repo-credentials.yaml
+*-credentials.yaml
+
+# Các file chứa mật khẩu và thông tin nhạy cảm
+*.properties
+*.pem
+*.key
+*.tfvars
+secrets.yaml
+*secret*.yaml
+*secret*.yml
+*secret*.json
+
+# Logs
+*.log
+
+# Local development
+.vscode/
+.idea/
+*.swp
+*.swo

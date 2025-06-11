@@ -158,3 +158,10 @@ variable "docdb_instance_count" {
   type        = number
   default     = 2
 }
+
+# Helm Variables
+variable "argo_cd_version" {
+  description = "Phiên bản Argo CD Helm chart"
+  type        = string
+  default     = "5.36.1" # Sử dụng phiên bản phù hợp
+}

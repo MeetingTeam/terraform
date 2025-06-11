@@ -1,0 +1,35 @@
+{{- $projectName := .Values.appproject.name -}}
+{{- $k8sServer := .Values.k8s.server -}}
+{{- $k8sRepo := .Values.k8s.repoUrl }}
+{{- range .Values.applications }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .name }}
+  {{- with .labels }}
+  labels:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  project: {{ $projectName }}
+  destination:
+    server: {{ $k8sServer }}
+    namespace: {{ .namespace }}
+  source:
+    path: {{ .source.path }}
+    repoURL: {{ $k8sRepo }}
+    targetRevision: {{ .source.targetRevision }}
+    {{- with .helm }}
+    helm:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- with .syncPolicy }}
+  syncPolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end -}}

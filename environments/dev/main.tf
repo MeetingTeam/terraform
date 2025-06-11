@@ -5,6 +5,14 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.0.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.9.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.20.0"
+    }
   }
    backend "s3" {
   bucket         = "nt548-terraform-state-dev"
@@ -12,6 +20,7 @@ terraform {
   region         = "ap-southeast-1"
   dynamodb_table = "nt548-terraform-lock-dev"
   }
+  
 }
 
 provider "aws" {
@@ -23,6 +32,27 @@ locals {
   cluster_name = var.cluster_name
   env          = var.env
   tags         = var.tags
+}
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_id]
+    command     = "aws"
+  }
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_id]
+      command     = "aws"
+    }
+  }
 }
 
 module "network" {
@@ -134,4 +164,13 @@ module "jenkins_efs" {
   tags = var.tags
   
   depends_on = [module.eks]
+}
+module "helm_releases" {
+  source = "../../modules/helm-releases"
+  
+  environment = var.env
+  
+  depends_on = [
+    module.eks
+  ]
 }

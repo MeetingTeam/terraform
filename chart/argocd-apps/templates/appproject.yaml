@@ -1,0 +1,37 @@
+{{- $k8sServer := .Values.k8s.server -}}
+{{- $k8sRepo := .Values.k8s.repoUrl }}
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .Values.appproject.name }}
+spec:
+  {{- with .Values.appproject.description }}
+  description: "{{ . }}"
+  {{- end }}
+  destinations:
+  {{- range .Values.appproject.namespaces }}
+    - namespace: {{ . }}
+      server: {{ $k8sServer }}
+  {{- end }}
+  sourceRepos:
+    - "{{ $k8sRepo }}"
+  {{- with .Values.appproject.clusterResourceWhitelist }}
+  clusterResourceWhitelist:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.appproject.clusterResourceBlacklist }}
+  clusterResourceBlacklist:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.appproject.namespaceResourceWhitelist }}
+  namespaceResourceWhitelist:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.appproject.namespaceResourceBlacklist }}
+  namespaceResourceBlacklist:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.appproject.orphanedResources }}
+  orphanedResources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
