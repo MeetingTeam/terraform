@@ -2,7 +2,6 @@ resource "helm_release" "argo_cd" {
   name             = "argocd"
   repository       = var.argo_cd_repository
   chart            = "${path.module}/../../chart/argo-cd"
-  version          = var.argo_cd_version
   namespace        = var.argo_cd_namespace
   create_namespace = true
   timeout          = 600
