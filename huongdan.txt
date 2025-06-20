@@ -3,6 +3,7 @@ Bước 2: Lần lượt dev vào prod chạy lệnh terraform init, và terrafo
 Bước 3: Mở git bash: 
 aws eks update-kubeconfig --name doan-cluster-dev --region ap-southeast-1
 Truy cập Jenkins bằng kubectl port-forward (nhanh, dùng tạm)
+kubectl -n jenkins get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 -d && echo
 
 kubectl port-forward svc/jenkins 30808:8080 -n jenkins
 Bước 4: Truy cập Jenkins
@@ -17,9 +18,6 @@ Bước 6: Cài đặt credentials, secret
 awsAccessKeyId: 
 awsSecretAccessKey: 
 betterguy2004: 
-kubectl get secret jenkins -o yaml -n jenkins
-https://www.base64decode.org/
-
 Bước 7: Thực hiện kịch bản Jenkins trigger terraform-pipeline khi có cập nhật thay đổi terraform trên git hub
 
 

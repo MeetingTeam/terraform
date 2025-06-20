@@ -44,9 +44,22 @@ pipeline{
                               }
                     }
                   stage('Approval') {
+                        when {
+                              expression { params.ENV == 'prod' }
+                        }
                         steps {
-                              timeout(time: 15, unit: "MINUTES") {
-                                    input(message: "Are you sure you want to apply these Terraform changes?", ok: "Yes, apply")
+                              timeout(time: 30, unit: "MINUTES") {
+                                    input(message: "PRODUCTION DEPLOYMENT: Are you sure you want to apply these Terraform changes?", ok: "Yes, deploy to PRODUCTION")
+                              }
+                        }
+                  }
+                  stage('Dev Approval') {
+                        when {
+                              expression { params.ENV == 'dev' }
+                        }
+                        steps {
+                              timeout(time: 10, unit: "MINUTES") {
+                                    input(message: "Apply changes to DEV environment?", ok: "Yes, apply")
                               }
                         }
                   }
