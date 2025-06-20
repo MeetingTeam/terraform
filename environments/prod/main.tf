@@ -14,7 +14,7 @@ terraform {
       version = ">= 2.20.0"
     }
   }
-  }
+  
    backend "s3" {
   bucket         = "nt548-terraform-state-prod"
   key            = "terraform.tfstate"
