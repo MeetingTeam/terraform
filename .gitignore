@@ -1,0 +1,76 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfvars.backup
+*.tfplan
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+
+# Vault secrets - NEVER commit these!
+vault-secret*/
+vault-secret-*/
+**/vault-secret/
+*.vault
+vault.json
+vault-config/
+
+# Kubernetes credentials and secrets - NEVER commit these!
+k8s-repo-credentials.yaml
+*-credentials.yaml
+kubeconfig*
+*.kubeconfig
+secret*.yaml
+*secret*.yml
+
+# AWS credentials
+.aws/
+*.pem
+*.key
+
+# Environment files with sensitive data
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Node modules (if any)
+node_modules/
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+*.pyo
+
+# ArgoCD generated files (if sensitive)
+argocd-secret.yaml
+cluster-secrets.yaml
+repository-secret.yaml
+
+# Jenkins credentials
+jenkins-credentials.xml

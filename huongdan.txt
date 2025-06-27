@@ -3,23 +3,24 @@ Bước 2: Lần lượt dev vào prod chạy lệnh terraform init, và terrafo
 Bước 3: Mở git bash: 
 aws eks update-kubeconfig --name doan-cluster-dev --region ap-southeast-1
 Truy cập Jenkins bằng kubectl port-forward (nhanh, dùng tạm)
+kubectl -n jenkins get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 -d && echo
 
 kubectl port-forward svc/jenkins 30808:8080 -n jenkins
 Bước 4: Truy cập Jenkins
 http://localhost:30808
 
 Bước 5: Cài đặt plugin
- # Kubernetes
+    # Kubernetes
     # Pipeline
     # Git
     # Configuration as Code Plugin
+    # SonarQube Scanner
+    # Github Branch Source
+    # Generic Webhook Trigger
 Bước 6: Cài đặt credentials, secret 
 awsAccessKeyId: 
 awsSecretAccessKey: 
 betterguy2004: 
-kubectl get secret jenkins -o yaml -n jenkins
-https://www.base64decode.org/
-
 Bước 7: Thực hiện kịch bản Jenkins trigger terraform-pipeline khi có cập nhật thay đổi terraform trên git hub
 
 
@@ -28,3 +29,38 @@ https://github.com/MeetingTeam/terraform
 This project is parameterized
 ENV: dev prod
 
+======================== ===========
+kubectl -n vault cp ./. vault-0:/home/vault
+
+
+$ kubectl exec -it vault-0 -n vault -- sh
+/ $ vault operator init
+Unseal Key 1: 
+Unseal Key 2: 
+Unseal Key 3: 
+Unseal Key 4: 
+Unseal Key 5: 
+
+Initial Root Token: 
+vault operator unseal
+
+sh vault-install.sh
+
+
+
+
+kubectl apply -f k8s-repo-credentials.yaml
+
+
+
+kubectl port-forward svc/argocd-server  30081:80 -n argo
+
+Dùng git: kubectl -n argo get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+kubectl port-forward svc/jenkins 30808:8080 -n jenkins
+kubectl -n jenkins get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 -d && echo
+
+
+
+====
+
+Lưu ý trước khi terraform destroy nhớ xoá target group và load balancer

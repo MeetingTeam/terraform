@@ -200,13 +200,13 @@ resource "aws_security_group" "efs_sg" {
   description = "Security group for EFS mount targets"
   vpc_id      = var.vpc_id
 
-  # Cho phép NFS traffic từ EKS nodes
+  # Cho phép NFS traffic từ any source
   ingress {
-    description     = "NFS traffic from EKS nodes"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.eks_nodes_sg.id]
+    description = "NFS traffic from any source"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {

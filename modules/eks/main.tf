@@ -232,17 +232,17 @@ resource "null_resource" "post_install" {
     aws_eks_addon.vpc_cni,
     aws_eks_addon.kube_proxy,
     aws_eks_addon.ebs_csi_driver,
-    aws_eks_addon.efs_csi_driver
+    aws_eks_addon.efs_csi_driver,
+    aws_eks_addon.cloudwatch_observability
   ]
 
-  # Trigger system
+  # Trigger system - chỉ chạy 1 lần hoặc khi force update
   triggers = {
-    cluster_version = aws_eks_cluster.main.version
-    run_time = var.force_update_post_install ? timestamp() : "initial-run"
+    run_time = var.force_update_post_install ? timestamp() : "initial-run-only"
   }
 
   provisioner "local-exec" {
-    interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
     command     = "${path.module}/../../scripts/post_eks_install.sh ${var.cluster_name} ${var.region} ${var.env}"
+    interpreter = local.interpreter
   }
 }

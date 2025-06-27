@@ -1,4 +1,3 @@
-
 resource "random_id" "suffix" {
   byte_length = 4
 }
@@ -159,17 +158,109 @@ resource "aws_iam_instance_profile" "eks_node_profile" {
   role = aws_iam_role.eks_node_role.name
 }
 # Attaching EBS CSI Driver Policy to EKS Node role
-resource "aws_iam_role_policy_attachment" "eks_node_AmazonEBSCSIDriverPolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+# REMOVED: aws_iam_role_policy_attachment.eks_node_AmazonEBSCSIDriverPolicy
+
+# Attaching EFS CSI Driver Policy to EKS Node role  
+# REMOVED: aws_iam_role_policy_attachment.eks_node_AmazonEFSCSIDriverPolicy
+
+##########################################
+# Enhanced Storage CSI Driver Policy - Combined EBS + EFS + Custom
+##########################################
+
+# Get AWS managed EBS CSI Driver policy document
+data "aws_iam_policy" "ebs_csi_driver" {
+  arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+# Get AWS managed EFS CSI Driver policy document
+data "aws_iam_policy" "efs_csi_driver" {
+  arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+}
+
+# Combined Storage Policy - EBS + EFS + Enhanced permissions
+resource "aws_iam_policy" "enhanced_storage_csi" {
+  name        = "${var.cluster_name}-enhanced-storage-csi-${var.env}-${random_id.suffix.hex}"
+  description = "Combined policy for EBS CSI, EFS CSI, and enhanced storage permissions"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = concat(
+      jsondecode(data.aws_iam_policy.ebs_csi_driver.policy).Statement,
+      jsondecode(data.aws_iam_policy.efs_csi_driver.policy).Statement,
+      [
+        {
+          Effect = "Allow",
+          Action = [
+            "ec2:CreateVolume",
+            "ec2:DeleteVolume", 
+            "ec2:AttachVolume",
+            "ec2:DetachVolume",
+            "ec2:ModifyVolume",
+            "ec2:DescribeVolumes",
+            "ec2:DescribeVolumeStatus",
+            "ec2:DescribeVolumeAttribute",
+            "ec2:CreateSnapshot",
+            "ec2:DeleteSnapshot",
+            "ec2:DescribeSnapshots",
+            "ec2:DescribeInstances",
+            "ec2:DescribeInstanceAttribute",
+            "ec2:DescribeRegions",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:CreateTags",
+            "ec2:DeleteTags",
+            "ec2:DescribeTags"
+          ],
+          Resource = "*"
+        },
+        {
+          Effect = "Allow",
+          Action = [
+            "elasticfilesystem:CreateFileSystem",
+            "elasticfilesystem:DeleteFileSystem",
+            "elasticfilesystem:DescribeFileSystems",
+            "elasticfilesystem:DescribeFileSystemPolicy",
+            "elasticfilesystem:CreateMountTarget",
+            "elasticfilesystem:DeleteMountTarget",
+            "elasticfilesystem:DescribeMountTargets",
+            "elasticfilesystem:DescribeMountTargetSecurityGroups",
+            "elasticfilesystem:CreateAccessPoint",
+            "elasticfilesystem:DeleteAccessPoint",
+            "elasticfilesystem:DescribeAccessPoints",
+            "elasticfilesystem:CreateTags",
+            "elasticfilesystem:DeleteTags",
+            "elasticfilesystem:DescribeTags",
+            "elasticfilesystem:PutFileSystemPolicy",
+            "elasticfilesystem:DescribeLifecycleConfiguration",
+            "elasticfilesystem:PutLifecycleConfiguration"
+          ],
+          Resource = "*"
+        }
+      ]
+    )
+  })
+
+  tags = merge(
+    {
+      Name        = "${var.cluster_name}-enhanced-storage-csi-${var.env}"
+      Environment = var.env
+    },
+    var.tags
+  )
+}
+
+# Attach combined storage policy to EKS Node role
+resource "aws_iam_role_policy_attachment" "eks_node_enhanced_storage_csi" {
+  policy_arn = aws_iam_policy.enhanced_storage_csi.arn
   role       = aws_iam_role.eks_node_role.name
 }
 
+# REMOVED: Custom separate EC2 and EFS policies - now included in enhanced_storage_csi
 
-# Attaching EFS CSI Driver Policy to EKS Node role
-resource "aws_iam_role_policy_attachment" "eks_node_AmazonEFSCSIDriverPolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-  role       = aws_iam_role.eks_node_role.name
-}
+# Custom policies combined into enhanced_storage_csi policy above
+
+##########################################
+# CloudWatch and Load Balancer Policies
+##########################################
 
 # 1. Get the policy document for CloudWatchAgentServerPolicy
 data "aws_iam_policy" "cloudwatch_agent" {
@@ -212,10 +303,6 @@ resource "aws_iam_policy" "combined_monitoring_lb" {
     )
   })
 }
-
-# 3. Remove the individual policy attachments
-# DELETE: aws_iam_role_policy_attachment.eks_node_CloudWatchAgentServerPolicy
-# DELETE: aws_iam_role_policy_attachment.eks_node_LoadBalancerControllerPolicy
 
 # 4. Add combined policy attachment
 resource "aws_iam_role_policy_attachment" "eks_node_combined_monitoring_lb" {

@@ -94,13 +94,13 @@ variable "disk_size" {
 variable "desired_capacity" {
   description = "Số lượng worker nodes mong muốn"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "min_capacity" {
   description = "Số lượng worker nodes tối thiểu"
   type        = number
-  default     = 1
+  default     = 3
 }
 
 variable "max_capacity" {

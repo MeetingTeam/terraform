@@ -32,72 +32,69 @@ echo "Cloning k8s-repo repository"
 git clone https://github.com/MeetingTeam/k8s-repo.git --branch main
 cd k8s-repo/opensource || exit 1
 
-
 # Chỉ cấu hình EFS và Jenkins trong môi trường dev
-if [ "${ENV}" == "dev" ]; then
-  # Lấy EFS ID từ output của terraform
-  export EFS_ID=$(terraform -chdir=${WORK_DIR}/../../environments/${ENV} output -raw jenkins_efs_id 2>/dev/null || echo "")
+if [ "${ENV}" = "dev" ]; then
+  # Gán cứng EFS ID
+  export EFS_ID="fs-01c6b682f204b8176"
 
   if [ -n "$EFS_ID" ]; then
-    echo "Configuring EFS StorageClass with ID: ${EFS_ID}"
+    echo "Configuring EFS PersistentVolume with ID: ${EFS_ID}"
     
-    # Tạo StorageClass sử dụng EFS
-    cat <<EOF > ${WORK_DIR}/efs-sc.yaml
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
+    # Tạo PersistentVolume sử dụng EFS
+    cat <<EOF > ${WORK_DIR}/jenkins-cache-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
 metadata:
-  name: efs-sc
-provisioner: efs.csi.aws.com
-parameters:
-  provisioningMode: efs-ap
-  fileSystemId: fs-01c6b682f204b8176
-  directoryPerms: "700"
+  name: jenkins-cache-pv
+spec:
+  capacity:
+    storage: 6Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: efs-sc
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: ${EFS_ID}
+    readOnly: false
 EOF
 
-    kubectl apply -f ${WORK_DIR}/efs-sc.yaml
-    echo "EFS StorageClass created successfully"
+    kubectl apply -f ${WORK_DIR}/jenkins-cache-pv.yaml
+    echo "EFS PersistentVolume created successfully"
   else
-    echo "EFS ID not found in terraform outputs, skipping StorageClass creation"
+    echo "EFS ID not found, skipping PersistentVolume creation"
   fi
-  
-  # Cài đặt Jenkins trong môi trường dev
-  echo "Installing/Upgrading Jenkins in DEV environment"
-  kubectl create ns jenkins 2>/dev/null || echo "Namespace jenkins already exists"
-  helm upgrade --install jenkins jenkins -f jenkins/values.custom.yaml -n jenkins --create-namespace
 fi
-
-# ...existing code...
-# Các cài đặt chung cho mọi môi trường
-echo "Installing/Upgrading Nginx Ingress"
-kubectl create ns ingress-nginx 2>/dev/null || echo "Namespace ingress-nginx already exists"
-
-# Chọn file values dựa trên môi trường
-if [ "${ENV}" == "dev" ]; then
-  NGINX_VALUES_FILE="ingress-nginx/values.dev.yaml"
-elif [ "${ENV}" == "prod" ]; then
-  NGINX_VALUES_FILE="ingress-nginx/values.prod.yaml"
-else
-  echo "Warning: Unknown environment '${ENV}' for Nginx Ingress. Defaulting to dev values."
-  NGINX_VALUES_FILE="ingress-nginx/values.dev.yaml" # Hoặc một file mặc định khác nếu cần
-fi
-
-echo "Using Nginx values file: ${NGINX_VALUES_FILE}"
-helm upgrade --install ingress-nginx ingress-nginx -f "${NGINX_VALUES_FILE}" -n ingress-nginx --create-namespace
-
-
-
-# Chỉ cài đặt Jenkins ở môi trường dev, đã được xử lý ở trên
-
-echo "Installing/Upgrading Vault"
-kubectl create ns vault 2>/dev/null || echo "Namespace vault already exists"
-helm upgrade --install vault vault -f vault/values.custom.yaml -n vault --create-namespace
 
 echo "Installing/Upgrading ArgoCD"
 kubectl create ns argo 2>/dev/null || echo "Namespace argo already exists"
 helm upgrade --install argocd argo-cd -f argo-cd/values.custom.yaml -n argo
 
-echo "Installing/Upgrading RabbitMQ"
-helm upgrade --install rabbitmq rabbitmq -f rabbitmq/values.custom.yaml
+# Chuyển sang thư mục argocd-apps để cài đặt applications
+echo "Installing ArgoCD Applications"
+cd ../argocd-apps || exit 1
+
+# Cài đặt ArgoCD apps dựa trên môi trường
+if [ "${ENV}" = "dev" ]; then
+  echo "Installing ArgoCD apps for DEV environment"
+  if [ -f "values.dev.yaml" ]; then
+    helm upgrade --install argocd-apps . -f values.dev.yaml -n argo
+    echo "ArgoCD apps installed with values.dev.yaml"
+  else
+    echo "values.dev.yaml not found, skipping ArgoCD apps installation"
+  fi
+elif [ "${ENV}" = "prod" ]; then
+  echo "Installing ArgoCD apps for PROD environment"
+  if [ -f "values.prod.yaml" ]; then
+    helm upgrade --install argocd-apps . -f values.prod.yaml -n argo
+    echo "ArgoCD apps installed with values.prod.yaml"
+  else
+    echo "values.prod.yaml not found, skipping ArgoCD apps installation"
+  fi
+else
+  echo "Unknown environment: ${ENV}. Skipping ArgoCD apps installation"
+fi
 
 # Dọn dẹp
 cd /tmp || exit 1
