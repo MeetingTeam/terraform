@@ -1,66 +1,191 @@
-Bước 1: Cấu hình aws configure, cài đặt kubectl, cài đặt helm chart, cài đặt git
-Bước 2: Lần lượt dev vào prod chạy lệnh terraform init, và terraform apply 
-Bước 3: Mở git bash: 
+# 📘 HƯỚNG DẪN NHANH - TERRAFORM EKS PROJECT
+
+⚠️ **CHÚ Ý**: File này chỉ để tham khảo nhanh. Xem chi tiết đầy đủ tại **README.md**
+
+## 🚀 QUICK START
+
+### Bước 1: Chuẩn bị môi trường
+```bash
+# Cài đặt các tools cần thiết:
+# - Terraform (>= 1.5.0)
+# - AWS CLI
+# - kubectl
+# - Helm (>= 3.0)
+# - Git & Git Bash (Windows)
+
+# Cấu hình AWS
+aws configure
+```
+
+### Bước 2: Deploy Infrastructure
+```bash
+cd environments/dev
+terraform init
+terraform apply
+```
+
+### Bước 3: Kết nối Cluster
+```bash
+# Mở Git Bash
 aws eks update-kubeconfig --name doan-cluster-dev --region ap-southeast-1
-Truy cập Jenkins bằng kubectl port-forward (nhanh, dùng tạm)
+
+# Verify
+kubectl get nodes
+```
+
+---
+
+## 🌐 TRUY CẬP CÁC DỊCH VỤ
+
+### 1️⃣ ArgoCD
+```bash
+kubectl port-forward svc/argocd-server 30081:80 -n argo
+
+# Lấy password:
+kubectl -n argo get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+# URL: http://localhost:30081
+# Username: admin
+```
+
+### 2️⃣ Jenkins
+```bash
+kubectl port-forward svc/jenkins 30808:8080 -n jenkins
+
+# Lấy password:
 kubectl -n jenkins get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 -d && echo
 
-kubectl port-forward svc/jenkins 30808:8080 -n jenkins
-Bước 4: Truy cập Jenkins
-http://localhost:30808
+# URL: http://localhost:30808
+# Username: admin
+```
 
-Bước 5: Cài đặt plugin
-    # Kubernetes
-    # Pipeline
-    # Git
-    # Configuration as Code Plugin
-    # SonarQube Scanner
-    # Github Branch Source
-    # Generic Webhook Trigger
-Bước 6: Cài đặt credentials, secret 
-awsAccessKeyId: 
-awsSecretAccessKey: 
-betterguy2004: 
-Bước 7: Thực hiện kịch bản Jenkins trigger terraform-pipeline khi có cập nhật thay đổi terraform trên git hub
+**Cấu hình Jenkins:**
 
+Plugins cần cài:
+- Kubernetes
+- Pipeline
+- Git
+- Configuration as Code Plugin
+- SonarQube Scanner
+- GitHub Branch Source
+- Generic Webhook Trigger
 
-https://github.com/MeetingTeam/terraform
+Credentials cần thêm:
+- `aws-credentials`: AWS Access Key & Secret
+- `github-token`: GitHub Token
+- `dockerhub-credentials`: DockerHub login
 
-This project is parameterized
-ENV: dev prod
+**Jenkins Pipeline:**
+- Tên: `terraform-pipeline`
+- Repo: https://github.com/MeetingTeam/terraform
+- Script: Jenkinsfile
+- Parameter: ENV (dev/prod)
+- Trigger: GitHub webhook
 
-======================== ===========
-kubectl -n vault cp ./. vault-0:/home/vault
+---
 
+## 🔒 VAULT SETUP
 
-$ kubectl exec -it vault-0 -n vault -- sh
-/ $ vault operator init
-Unseal Key 1: 
-Unseal Key 2: 
-Unseal Key 3: 
-Unseal Key 4: 
-Unseal Key 5: 
+```bash
+# Copy files vào vault pod
+kubectl -n vault cp ./vault-config/. vault-0:/home/vault
 
-Initial Root Token: 
-vault operator unseal
+# Exec vào pod
+kubectl exec -it vault-0 -n vault -- sh
 
+# Initialize (chỉ 1 lần!)
+vault operator init
+
+# ⚠️ LƯU LẠI Unseal Keys và Root Token!
+# Unseal Key 1: [SAVE]
+# Unseal Key 2: [SAVE]
+# Unseal Key 3: [SAVE]
+# Unseal Key 4: [SAVE]
+# Unseal Key 5: [SAVE]
+# Initial Root Token: [SAVE]
+
+# Unseal (cần 3/5 keys)
+vault operator unseal [KEY_1]
+vault operator unseal [KEY_2]
+vault operator unseal [KEY_3]
+
+# Run setup script (nếu có)
 sh vault-install.sh
+```
 
+---
 
+## 🔑 K8S SECRETS
 
-
+```bash
+# Apply credentials cho ArgoCD pull private repo
 kubectl apply -f k8s-repo-credentials.yaml
+```
 
+---
 
+## 🧹 CLEANUP
 
-kubectl port-forward svc/argocd-server  30081:80 -n argo
+### ⚠️ QUAN TRỌNG: Xóa theo thứ tự!
 
-Dùng git: kubectl -n argo get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-kubectl port-forward svc/jenkins 30808:8080 -n jenkins
-kubectl -n jenkins get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 -d && echo
+**Bước 1: Xóa Kubernetes workloads**
+```bash
+kubectl delete all --all --all-namespaces
+kubectl delete pvc --all --all-namespaces
+```
 
+**Bước 2: Xóa Load Balancers (BẮT BUỘC)**
+```bash
+# List load balancers
+aws elbv2 describe-load-balancers \
+  --query 'LoadBalancers[?contains(LoadBalancerName, `k8s`)].LoadBalancerArn'
 
+# Delete load balancers
+aws elbv2 delete-load-balancer --load-balancer-arn <arn>
 
-====
+# List target groups
+aws elbv2 describe-target-groups \
+  --query 'TargetGroups[?contains(TargetGroupName, `k8s`)].TargetGroupArn'
 
-Lưu ý trước khi terraform destroy nhớ xoá target group và load balancer
+# Delete target groups
+aws elbv2 delete-target-group --target-group-arn <arn>
+```
+
+**Bước 3: Terraform Destroy**
+```bash
+cd environments/dev
+terraform destroy
+```
+
+---
+
+## 📚 TÀI LIỆU CHI TIẾT
+
+✅ **README.md** - Hướng dẫn đầy đủ chi tiết
+✅ **environments/dev/README.md** - Development environment
+✅ **environments/prod/README.md** - Production environment
+
+Xem thêm chi tiết về:
+- Kiến trúc hệ thống
+- Cấu trúc modules
+- Troubleshooting
+- Monitoring & Logging
+- Security best practices
+- Backup & Recovery
+
+---
+
+## 🆘 CẦN TRỢ GIÚP?
+
+1. Đọc [README.md](./README.md) trước
+2. Kiểm tra logs: `kubectl logs -f <pod> -n <namespace>`
+3. Xem events: `kubectl get events -A --sort-by='.lastTimestamp'`
+4. Tạo issue trên GitHub
+
+---
+
+**📌 Ghi chú nhanh:**
+- Post-install script tự động chạy sau terraform apply
+- EFS được tạo tự động cho Jenkins cache (dev only)
+- ArgoCD và applications được cài tự động
+- Credentials phải setup thủ công trong Jenkins UI
