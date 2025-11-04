@@ -56,14 +56,7 @@ resource "aws_eks_node_group" "main" {
     max_unavailable = 1
   }
 
-  # Apply remote_access if key_name is specified
-  dynamic "remote_access" {
-    for_each = var.key_name != "" ? [1] : []
-    content {
-      ec2_ssh_key = var.key_name
-      source_security_group_ids = [var.node_sg_id]
-    }
-  }
+  
 
   labels = {
     role = "standard"

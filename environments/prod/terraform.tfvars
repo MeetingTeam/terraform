@@ -3,7 +3,6 @@ env               = "prod"
 cluster_name      = "doan-cluster"
 vpc_cidr          = "10.1.0.0/16"
 kubernetes_version = "1.29"
-key_name          = "volunteer-work-keypair"  # Thay bằng tên key pair thực tế nếu cần SSH access
 mysql_password       = "Admin!123456" # Nên sử dụng AWS Secrets Manager trong môi trường thực tế
 docdb_password       = "Admin!123456" # Nên sử dụng AWS Secrets Manager trong môi trường thực tế
 create_mysql         = true

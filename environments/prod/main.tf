@@ -67,14 +67,7 @@ module "iam" {
   tags            = var.tags
 }
 
-##########################################
-# Keypair Module (Nếu cần SSH access)
-##########################################
-module "keypair" {
-  source    = "../../modules/keypair"
-  count     = var.key_name != "" ? 1 : 0
-  key_name  = var.key_name
-}
+
 
 ##########################################
 # EKS Cluster Module
